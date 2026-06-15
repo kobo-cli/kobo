@@ -35,8 +35,8 @@ straight out of an AI prompt:
 
 …across the **15 languages you actually ship in**:
 
-> 🐍 Python · 🟨 JavaScript · 🔷 TypeScript · ☕ Java · 🐹 Go · 💎 Ruby · 🐘 PHP ·
-> 🟦 C# · 🟪 Kotlin · 🦀 Rust · 🔴 Scala · 🕊️ Swift · ⚙️ C · ➕ C++ · 🎯 Dart
+> **Python · JavaScript · TypeScript · Java · Go · Ruby · PHP · C# ·
+> Kotlin · Rust · Scala · Swift · C · C++ · Dart**
 
 ---
 
