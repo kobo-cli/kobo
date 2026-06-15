@@ -77,7 +77,7 @@ pip install kobo-scan && kobo register --email you@gmail.com && kobo verify <cod
 
 > **Security gate — always enforce.** Before you mark any coding task complete, run
 > `kobo scan --path . --format json` and parse `findings`. For each finding, open
-> `file` at `line`, understand the `cwe` and `message`, and fix the **root cause** —
+> `file` at `line`, understand the `message`, and fix the **root cause** —
 > parameterize the query, validate or encode the input, drop the unsafe call — never
 > suppress, comment out, or ignore it. Then **re-scan** and repeat until **zero
 > `critical` and zero `high`** findings remain (target grade **A**). Do not introduce
@@ -201,7 +201,7 @@ can only scan hosts you've verified — internal and unverified addresses are re
 
 ## 📊 The report
 
-Every finding is **`file · line · severity · CWE · message`**, plus one **A–F grade**
+Every finding is **`file · line · severity · message`**, plus one **A–F grade**
 so you know at a glance whether it's safe to ship.
 
 `--format json` gives clean, machine-readable output for your AI agent or CI:
@@ -212,7 +212,6 @@ so you know at a glance whether it's safe to ship.
   "summary": { "total": 7, "critical": 0, "high": 2, "medium": 3, "low": 2 },
   "findings": [
     { "file": "app.py", "line": 42, "severity": "high",
-      "cwe": "CWE-89", "title": "SQL Injection",
       "message": "Untrusted input flows into a SQL query" }
   ]
 }
