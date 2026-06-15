@@ -73,7 +73,7 @@ not in a security review three weeks later. **Set it up once, then it runs itsel
 pip install kobo-scan && kobo register --email you@gmail.com && kobo verify <code>
 ```
 
-**2. Paste this rule into your AI tool — then forget about it:**
+**2. Paste this rule into your AI tool — then forget about it** (or run `kobo agent` to print it):
 
 > **Security gate — always enforce.** Before you mark any coding task complete, run
 > `kobo scan --path . --format json` and parse `findings`. For each finding, open
@@ -194,8 +194,13 @@ can only scan hosts you've verified — internal and unverified addresses are re
 | `kobo report --last` | re-fetch your latest report (`--format json`) |
 | `kobo history` | list your past scans |
 | `kobo whoami` / `kobo logout` | show account / forget credentials |
+| `kobo agent` | print the rule to paste into an AI tool (`CLAUDE.md`, `.cursorrules`…) |
 | `kobo config --server <url>` | point at a different API endpoint |
 | `kobo version` | print the version |
+
+> 💡 **The CLI is self-documenting.** Run `kobo` (or `kobo --help`, `kobo scan --help`)
+> for the full guide — quickstart, live-target usage, and the AI-agent workflow + JSON
+> shape are built right in, so an agent can learn the whole tool with no README.
 
 ---
 
