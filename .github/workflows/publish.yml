@@ -1,0 +1,35 @@
+name: Publish to PyPI
+
+# Publishes the Kobo CLI to PyPI automatically when you create a GitHub Release.
+# Uses PyPI Trusted Publishing (OIDC) — NO token/secret needed once configured.
+#
+# One-time PyPI setup (pypi.org -> your account -> Publishing -> Add a pending publisher):
+#   PyPI project name: kobo-scan
+#   Owner:             kobo-cli
+#   Repository name:   kobo
+#   Workflow name:     publish.yml
+#   Environment:       (leave blank)
+#
+# Then: bump `version` in pyproject.toml, commit/push, and create a GitHub Release
+# (tag e.g. v0.1.1). This workflow builds + uploads to PyPI on its own.
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write          # required for Trusted Publishing (OIDC)
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build
+        run: |
+          python -m pip install --upgrade build
+          python -m build
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
