@@ -14,11 +14,28 @@ exactly what it does.
 
 ## Install
 
+Requires **Python 3.10+**. Pick any one:
+
+**A) Install from GitHub (one line):**
 ```bash
-pip install kobo-cli      # installs the `kobo` command
+pip install git+https://github.com/kobo-cli/kobo.git
 ```
 
-Requires Python 3.10+.
+**B) Clone, then install:**
+```bash
+git clone https://github.com/kobo-cli/kobo.git
+cd kobo
+pip install .
+```
+
+**C) Download the ZIP:** click the green **Code → Download ZIP** above, unzip, then:
+```bash
+cd kobo
+pip install .
+```
+
+All three give you the `kobo` command. (Prefer not to install? You can also just run
+the single file directly: `python kobo.py --help`.)
 
 ## Getting started (3 steps)
 
