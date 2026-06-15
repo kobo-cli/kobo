@@ -16,6 +16,26 @@ This repo is the **command-line client only**. It zips your project, sends it to
 the Kobo API over HTTPS, and prints the result. It's open source so you can verify
 exactly what it does.
 
+## What it catches
+
+The bugs that actually get apps hacked — the ones that pass code review and slip
+out of an AI prompt looking totally fine:
+
+- 💉 **Injection** — SQL, NoSQL, OS-command, code/`eval`, LDAP, XPath
+- 🌐 **Web attacks** — XSS, SSRF, open redirects, request/header smuggling
+- 📂 **Files & data** — path traversal, unsafe deserialization, XXE, template injection
+- 🔑 **Leaked secrets** — hardcoded API keys, tokens, passwords
+- 📦 **Risky dependencies** — packages you import that have known security holes
+- ⚙️ **Misconfig** — insecure infrastructure config, weak crypto
+
+…in the languages you actually ship:
+
+**Python · JavaScript · TypeScript · Java · Go · Ruby · PHP · C# · Kotlin · Rust ·
+Scala · Swift · C · C++ · Dart**
+
+You get a plain list of *file · line · what's wrong · how to fix* — and a single
+letter grade (A–F) so you know at a glance whether it's safe to ship.
+
 ---
 
 ## Install
