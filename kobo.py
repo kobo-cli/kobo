@@ -8,7 +8,7 @@ Self-service: registers your account, manages your API key, accepts the terms on
 (server-side gate), uploads your code, and prints a lean AI-friendly report. No
 wallet/quota/billing — this is the free trial.
 
-  kobo config --server https://api.kobo.dev
+  kobo config --server https://kobo-api-712614001328.europe-west1.run.app
   kobo register --email you@gmail.com
   kobo verify 123456
   kobo scan --path .
@@ -31,7 +31,7 @@ _HOME = os.environ.get("KOBO_HOME") or os.path.join(os.path.expanduser("~"), ".k
 _CONFIG = os.path.join(_HOME, "config.json")
 _CREDS = os.path.join(_HOME, "credentials.json")
 # Production API. Override locally with: kobo config --server <url>
-_DEFAULT_SERVER = os.environ.get("KOBO_SERVER", "https://api.kobo.dev")
+_DEFAULT_SERVER = os.environ.get("KOBO_SERVER", "https://kobo-api-712614001328.europe-west1.run.app")
 
 # directories never worth uploading
 _SKIP_DIRS = {".git", "node_modules", "__pycache__", ".venv", "venv", "dist",
