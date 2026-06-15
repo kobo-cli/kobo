@@ -51,9 +51,9 @@ straight out of an AI prompt:
 ![C++](https://img.shields.io/badge/C++-00599C?logo=cplusplus&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-0175C2?logo=dart&logoColor=white)
 
-> 🔌 **Embedded & firmware included.** STM32 and other C/C++ targets are detected and
-> scanned **automatically** — no setup — for the memory-safety and unsafe-API bugs
-> that bite firmware.
+> 🔌 **Embedded & firmware, first-class.** STM32 and other C/C++ targets are detected
+> and scanned **automatically** — no setup — with a dedicated **STM32 / ARM Cortex-M
+> HAL** ruleset for the peripheral-misuse and memory-safety bugs that bite firmware.
 
 ---
 
