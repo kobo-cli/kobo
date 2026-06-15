@@ -14,28 +14,28 @@ exactly what it does.
 
 ## Install
 
-Requires **Python 3.10+**. Pick any one:
+Requires **Python 3.10+**.
 
-**A) Install from GitHub (one line):**
 ```bash
+pip install kobo-scan      # installs the `kobo` command
+```
+
+That's it — `pip install kobo-scan` (the package), then use `kobo`.
+
+<details>
+<summary>Other ways to install</summary>
+
+```bash
+# from GitHub
 pip install git+https://github.com/kobo-cli/kobo.git
-```
 
-**B) Clone, then install:**
-```bash
-git clone https://github.com/kobo-cli/kobo.git
-cd kobo
+# or clone / download ZIP, then:
 pip install .
-```
 
-**C) Download the ZIP:** click the green **Code → Download ZIP** above, unzip, then:
-```bash
-cd kobo
-pip install .
+# or run the single file directly, no install:
+python kobo.py --help
 ```
-
-All three give you the `kobo` command. (Prefer not to install? You can also just run
-the single file directly: `python kobo.py --help`.)
+</details>
 
 ## Getting started (3 steps)
 
