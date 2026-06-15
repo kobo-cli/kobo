@@ -51,6 +51,10 @@ straight out of an AI prompt:
 ![C++](https://img.shields.io/badge/C++-00599C?logo=cplusplus&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-0175C2?logo=dart&logoColor=white)
 
+> 🔌 **Embedded & firmware included.** STM32 and other C/C++ targets are detected and
+> scanned **automatically** — no setup — for the memory-safety and unsafe-API bugs
+> that bite firmware.
+
 ---
 
 ## 🤖 Built for your AI coding agent
