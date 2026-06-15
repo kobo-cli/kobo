@@ -1,6 +1,12 @@
 # Kobo CLI
 
-**Free security scanning for your code, from the command line.**
+**AI writes code fast — and ships bugs and vulnerabilities just as fast.** Every
+generated function can hide SQL injection, leaked secrets, command injection, or
+unsafe deserialization that *looks* perfectly fine. **Kobo is the security gate for
+AI-assisted development:** one command scans your code and hands your AI agent
+machine-readable findings to fix — before they ever reach production.
+
+*Free security scanning for your code, from the command line.*
 
 Kobo scans your project for real vulnerabilities — SQL injection, XSS, command
 injection, SSRF, path traversal, insecure deserialization, and more — and gives
