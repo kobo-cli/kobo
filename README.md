@@ -135,6 +135,20 @@ python kobo.py --help                                  # run the single file, no
 ```
 </details>
 
+<details><summary>🪟 Windows: <code>kobo</code> not found after install?</summary>
+
+Not a Kobo issue — Windows just doesn't search Python's scripts folder by default.
+Fix it once:
+
+```powershell
+python -m pipx ensurepath
+```
+
+Then **close and reopen your terminal** — `kobo --help` will work. (No pipx? Run
+`pip install pipx` first. This one-time step puts *every* pip-installed command on
+your PATH, not just Kobo.)
+</details>
+
 ---
 
 ## 🚀 Quick start
