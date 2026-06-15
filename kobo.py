@@ -25,7 +25,11 @@ import zipfile
 
 import httpx
 
-__version__ = "0.1.0"
+try:  # report the ACTUAL installed version, so it never drifts from the release
+    from importlib.metadata import version as _pkg_version
+    __version__ = _pkg_version("kobo-scan")
+except Exception:
+    __version__ = "0.0.0+source"
 
 _HOME = os.environ.get("KOBO_HOME") or os.path.join(os.path.expanduser("~"), ".kobo")
 _CONFIG = os.path.join(_HOME, "config.json")
