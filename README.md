@@ -89,6 +89,23 @@ with AI-speed development. Zero glue code.**
 
 ---
 
+## ⚖️ Why a scanner — not "just ask the AI to review"
+
+Letting your agent security-review every change **costs tokens** and is
+**non-deterministic** — it reasons differently each run and silently skips whole
+classes of bugs. Kobo is the opposite: deterministic, repeatable **SAST** (static
+analysis), **dependency & secret** scanning, and **IaC** config checks. Same code
+in → same findings out, in seconds, for free.
+
+**Honest scope.** Kobo catches concrete, detectable vulnerabilities — injection,
+leaked secrets, unsafe deserialization, weak crypto, insecure infrastructure config.
+It does **not** reason about *business logic*: broken access rules, pricing or quota
+abuse, "should this user be allowed to do this?" No scanner catches those reliably —
+that's where your own review and your agent's judgment still earn their keep. Run
+Kobo for the deterministic security floor; keep a human in the loop for intent.
+
+---
+
 ## 📦 Install
 
 Requires **Python 3.10+**.
