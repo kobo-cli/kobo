@@ -322,13 +322,54 @@ def cmd_verify_target(args) -> None:
         _die("not verified yet — make sure the DNS record or file is live, then re-run with --check")
 
 
+_AI_GUIDE = """\
+AI agents — use Kobo as an automatic security gate:
+  1. After writing or changing code, run:  kobo scan --path . --format json
+  2. Parse the JSON. For each item in `findings`, open `file` at `line` and fix the
+     problem in `message` (fix the root cause; never suppress or ignore it).
+  3. Re-scan and repeat until ZERO `critical` and `high` findings remain (aim for
+     grade A). Never report a task done while a critical/high finding is open.
+  Severity is one of: critical | high | medium | low.
+  Report JSON: { "grade": "A".."F",
+                 "summary": { "total", "critical", "high", "medium", "low" },
+                 "findings": [ { "file", "line", "severity", "message" } ] }
+  Run `pip install -U kobo-scan` now and then to stay on the latest scanner."""
+
+_EPILOG = """\
+Quickstart:
+  kobo register --email you@gmail.com    get a 6-digit code by email
+  kobo verify 123456                     activate + save your key (in ~/.kobo)
+  kobo scan --path .                     scan the current project
+  kobo scan --path . --format json       machine-readable output (CI / AI agents)
+
+Scan live targets you OWN (prove ownership first):
+  kobo verify-target app.example.com [--check]
+  kobo scan --url https://app.example.com
+
+""" + _AI_GUIDE + """
+
+Upgrade:  pip install -U kobo-scan       Docs:  https://github.com/kobo-cli/kobo"""
+
+
 def cmd_version(args) -> None:
     print(f"kobo {__version__}")
 
 
+def cmd_agent(args) -> None:
+    """Print the instruction to paste into an AI coding tool (CLAUDE.md, .cursorrules…)."""
+    print(_AI_GUIDE)
+
+
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="kobo", description="Kobo free-tier security scanner")
-    sub = p.add_subparsers(dest="cmd", required=True)
+    p = argparse.ArgumentParser(
+        prog="kobo",
+        description="Kobo — free security scanner for AI-assisted development. Scans "
+                    "code (15+ languages) and live targets you own; returns findings + "
+                    "an A-F grade. Built to be run by AI coding agents.",
+        epilog=_EPILOG,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    sub = p.add_subparsers(dest="cmd", metavar="<command>")
 
     s = sub.add_parser("config", help="set the server URL"); s.add_argument("--server"); s.set_defaults(fn=cmd_config)
     s = sub.add_parser("register", help="register an email"); s.add_argument("--email", required=True); s.set_defaults(fn=cmd_register)
@@ -337,9 +378,19 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--key", required=True); s.set_defaults(fn=cmd_login)
     s = sub.add_parser("whoami", help="show account"); s.set_defaults(fn=cmd_whoami)
     s = sub.add_parser("logout", help="forget credentials"); s.set_defaults(fn=cmd_logout)
-    s = sub.add_parser("scan", help="scan a project and/or an owned live target")
+    s = sub.add_parser(
+        "scan", help="scan a project and/or an owned live target",
+        description="Scan a project directory and/or a live target you own. With no "
+                    "active flag, scans --path (default '.'). Outputs a grade + findings.",
+        epilog="Examples:\n"
+               "  kobo scan --path .\n"
+               "  kobo scan --path . --format json          # for CI or an AI agent\n"
+               "  kobo scan --url https://app.example.com   # live web app (owned)\n"
+               "  kobo scan --image ghcr.io/you/app:latest  # container image\n"
+               "  kobo scan --db postgresql://user:pass@host:5432/dbname",
+        formatter_class=argparse.RawDescriptionHelpFormatter)
     s.add_argument("--path", default=None, help="project dir to scan (default '.' if no active target)")
-    s.add_argument("--format", choices=["text", "json"], default="text")
+    s.add_argument("--format", choices=["text", "json"], default="text", help="text (default) or json")
     s.add_argument("--url", help="active web scan of an OWNED url (DAST)")
     s.add_argument("--image", help="scan a container image ref for CVEs/secrets")
     s.add_argument("--openapi", help="OpenAPI/Swagger spec url (use with --api-url)")
@@ -353,12 +404,18 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--last", action="store_true"); s.add_argument("--id", type=int); s.add_argument("--format", default="json")
     s.set_defaults(fn=cmd_report)
     s = sub.add_parser("history", help="list scans"); s.set_defaults(fn=cmd_history)
+    s = sub.add_parser("agent", help="print the rule to paste into an AI tool (CLAUDE.md, .cursorrules…)")
+    s.set_defaults(fn=cmd_agent)
     s = sub.add_parser("version", help="print version"); s.set_defaults(fn=cmd_version)
     return p
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = build_parser().parse_args(argv)
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    if not getattr(args, "cmd", None):   # bare `kobo` → show the full guide, not an error
+        parser.print_help()
+        return 0
     args.fn(args)
     return 0
 
