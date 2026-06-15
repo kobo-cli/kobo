@@ -1,18 +1,18 @@
 [project]
-name = "kovo-cli"
+name = "kobo-cli"
 version = "0.1.0"
-description = "Kovo — free-tier security scanner CLI"
+description = "Kobo — free-tier security scanner CLI"
 requires-python = ">=3.10"
 license = "AGPL-3.0-or-later"
 license-files = ["LICENSE"]
 dependencies = ["httpx>=0.27"]
 
 [project.scripts]
-kovo = "kovo:main"
+kobo = "kobo:main"
 
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-py-modules = ["kovo"]
+py-modules = ["kobo"]

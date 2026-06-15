@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-# Kovo CLI — Copyright (C) 2026 Kovo
+# Kobo CLI — Copyright (C) 2026 Kobo
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # Free software under the GNU Affero General Public License v3 or later; see LICENSE.
-"""kovo — free-tier security scanner CLI.
+"""kobo — free-tier security scanner CLI.
 
 Self-service: registers your account, manages your API key, accepts the terms once
 (server-side gate), uploads your code, and prints a lean AI-friendly report. No
 wallet/quota/billing — this is the free trial.
 
-  kovo config --server https://api.kovo.dev
-  kovo register --email you@gmail.com
-  kovo verify 123456
-  kovo scan --path .
-  kovo report --last --format json
+  kobo config --server https://api.kobo.dev
+  kobo register --email you@gmail.com
+  kobo verify 123456
+  kobo scan --path .
+  kobo report --last --format json
 """
 from __future__ import annotations
 
@@ -27,11 +27,11 @@ import httpx
 
 __version__ = "0.1.0"
 
-_HOME = os.environ.get("KOVO_HOME") or os.path.join(os.path.expanduser("~"), ".kovo")
+_HOME = os.environ.get("KOBO_HOME") or os.path.join(os.path.expanduser("~"), ".kobo")
 _CONFIG = os.path.join(_HOME, "config.json")
 _CREDS = os.path.join(_HOME, "credentials.json")
-# Production API. Override locally with: kovo config --server <url>
-_DEFAULT_SERVER = os.environ.get("KOVO_SERVER", "https://api.kovo.dev")
+# Production API. Override locally with: kobo config --server <url>
+_DEFAULT_SERVER = os.environ.get("KOBO_SERVER", "https://api.kobo.dev")
 
 # directories never worth uploading
 _SKIP_DIRS = {".git", "node_modules", "__pycache__", ".venv", "venv", "dist",
@@ -71,7 +71,7 @@ def make_client() -> httpx.Client:
 def _auth_headers() -> dict:
     key = _read(_CREDS).get("api_key")
     if not key:
-        _die("not logged in — run `kovo register` then `kovo verify <code>`")
+        _die("not logged in — run `kobo register` then `kobo verify <code>`")
     return {"Authorization": f"Bearer {key}"}
 
 
@@ -121,19 +121,30 @@ def cmd_register(args) -> None:
     if r.status_code != 200:
         _die(_detail(r))
     _write(_CREDS, {**_read(_CREDS), "email": args.email}, secret=True)
-    print(f"verification code sent to {args.email} — run `kovo verify <code>`")
+    print(f"verification code sent to {args.email} — run `kobo verify <code>`")
 
 
 def cmd_verify(args) -> None:
     email = _read(_CREDS).get("email")
     if not email:
-        _die("run `kovo register --email ...` first")
+        _die("run `kobo register --email ...` first")
     with make_client() as c:
         r = c.post("/verify", json={"email": email, "code": args.code})
     if r.status_code != 200:
         _die(_detail(r))
     _write(_CREDS, {"email": email, "api_key": r.json()["api_key"]}, secret=True)
-    print("verified — you're ready to scan with `kovo scan --path .`")
+    print("verified — you're ready to scan with `kobo scan --path .`")
+
+
+def cmd_login(args) -> None:
+    """Authenticate on a new machine with an existing API key."""
+    with make_client() as c:
+        r = c.get("/whoami", headers={"Authorization": f"Bearer {args.key}"})
+    if r.status_code != 200:
+        _die("invalid api key")
+    email = r.json().get("email", "")
+    _write(_CREDS, {"email": email, "api_key": args.key}, secret=True)
+    print(f"logged in as {email}")
 
 
 def cmd_whoami(args) -> None:
@@ -159,7 +170,7 @@ def _ensure_terms(c: httpx.Client, headers: dict) -> None:
         return
     health = c.get("/health").json()
     version, url = health.get("terms_version"), _read(_CONFIG).get("terms_url", health.get("terms_url", ""))
-    print(f"\nFirst scan — you must accept the Kovo Terms (v{version}):\n  {url or 'see TERMS.md'}")
+    print(f"\nFirst scan — you must accept the Kobo Terms (v{version}):\n  {url or 'see TERMS.md'}")
     ans = input("Accept? [y/N] ").strip().lower()
     if ans != "y":
         _die("terms not accepted — scan cancelled")
@@ -186,7 +197,7 @@ def cmd_scan(args) -> None:
         print(f"\nSecurity Grade: {body['grade']}")
         print(f"Findings: {s['total']}  (critical {s['critical']} · high {s['high']} "
               f"· medium {s['medium']} · low {s['low']})")
-        print(f"Full report: kovo report --last --format json   (scan #{body['scan_id']})")
+        print(f"Full report: kobo report --last --format json   (scan #{body['scan_id']})")
 
 
 def cmd_report(args) -> None:
@@ -212,16 +223,18 @@ def cmd_history(args) -> None:
 
 
 def cmd_version(args) -> None:
-    print(f"kovo {__version__}")
+    print(f"kobo {__version__}")
 
 
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="kovo", description="Kovo free-tier security scanner")
+    p = argparse.ArgumentParser(prog="kobo", description="Kobo free-tier security scanner")
     sub = p.add_subparsers(dest="cmd", required=True)
 
     s = sub.add_parser("config", help="set the server URL"); s.add_argument("--server"); s.set_defaults(fn=cmd_config)
     s = sub.add_parser("register", help="register an email"); s.add_argument("--email", required=True); s.set_defaults(fn=cmd_register)
     s = sub.add_parser("verify", help="verify the OTP code"); s.add_argument("code"); s.set_defaults(fn=cmd_verify)
+    s = sub.add_parser("login", help="log in with an existing API key")
+    s.add_argument("--key", required=True); s.set_defaults(fn=cmd_login)
     s = sub.add_parser("whoami", help="show account"); s.set_defaults(fn=cmd_whoami)
     s = sub.add_parser("logout", help="forget credentials"); s.set_defaults(fn=cmd_logout)
     s = sub.add_parser("scan", help="scan a project")
