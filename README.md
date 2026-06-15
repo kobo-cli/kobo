@@ -227,8 +227,14 @@ GRADE=$(kobo scan --path . --format json | jq -r .grade)
 
 ## 🆓 Free tier
 
-Unlimited use for individual developers and small teams, with a light rate limit
-(a few scans per 5-hour window). **No payment, no credit card, no quotas to manage.**
+Free for individual developers and small teams. Light rate limits keep it fair:
+
+| Scan type | Limit |
+|---|---|
+| 📦 **Code scans** (`--path`) | 5 per 5-hour window |
+| 🎯 **Live-target scans** (`--url` / `--api-url` / `--db` / `--image`) | 10 per hour |
+
+**No payment, no credit card, no quotas to manage.**
 
 ---
 

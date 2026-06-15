@@ -39,6 +39,36 @@ _SKIP_DIRS = {".git", "node_modules", "__pycache__", ".venv", "venv", "dist",
 _MAX = 50 * 1024 * 1024
 
 
+# ── color (smart: only on a real terminal; honors NO_COLOR; ANSI on Windows) ────
+def _supports_color() -> bool:
+    if os.environ.get("NO_COLOR") or os.environ.get("KOBO_NO_COLOR"):
+        return False
+    if not sys.stdout.isatty():
+        return False
+    if sys.platform == "win32":
+        try:  # turn on ANSI handling for modern Windows consoles
+            import ctypes
+            k = ctypes.windll.kernel32
+            k.SetConsoleMode(k.GetStdHandle(-11), 7)  # ENABLE_VIRTUAL_TERMINAL_PROCESSING
+        except Exception:
+            return False
+    return True
+
+
+_COLOR = _supports_color()
+
+
+def _c(text: str, code: str) -> str:
+    return f"\033[{code}m{text}\033[0m" if _COLOR else text
+
+
+_GRADE_CODE = {"A": "1;32", "B": "1;32", "C": "1;33", "D": "1;33"}  # F / other → red
+
+
+def _sev(label: str, n: int, code: str) -> str:
+    return _c(f"{label} {n}", code if n else "2")  # dim when zero
+
+
 # ── local state ───────────────────────────────────────────────────────────────
 def _read(path: str) -> dict:
     try:
@@ -76,7 +106,7 @@ def _auth_headers() -> dict:
 
 
 def _die(msg: str, code: int = 1) -> None:
-    print(f"error: {msg}", file=sys.stderr)
+    print(_c("error:", "1;31") + f" {msg}", file=sys.stderr)
     sys.exit(code)
 
 
@@ -121,7 +151,8 @@ def cmd_register(args) -> None:
     if r.status_code != 200:
         _die(_detail(r))
     _write(_CREDS, {**_read(_CREDS), "email": args.email}, secret=True)
-    print(f"verification code sent to {args.email} — run `kobo verify <code>`")
+    print(_c("✓", "32") + f" verification code sent to {args.email} — run "
+          + _c("kobo verify <code>", "36"))
 
 
 def cmd_verify(args) -> None:
@@ -133,7 +164,7 @@ def cmd_verify(args) -> None:
     if r.status_code != 200:
         _die(_detail(r))
     _write(_CREDS, {"email": email, "api_key": r.json()["api_key"]}, secret=True)
-    print("verified — you're ready to scan with `kobo scan --path .`")
+    print(_c("✓", "32") + " verified — you're ready to scan with " + _c("kobo scan --path .", "36"))
 
 
 def cmd_login(args) -> None:
@@ -144,7 +175,7 @@ def cmd_login(args) -> None:
         _die("invalid api key")
     email = r.json().get("email", "")
     _write(_CREDS, {"email": email, "api_key": args.key}, secret=True)
-    print(f"logged in as {email}")
+    print(_c("✓", "32") + f" logged in as {email}")
 
 
 def cmd_whoami(args) -> None:
@@ -228,10 +259,18 @@ def cmd_scan(args) -> None:
         print(json.dumps(rep["report"], indent=2))
     else:
         s = body["summary"]
-        print(f"\nSecurity Grade: {body['grade']}")
-        print(f"Findings: {s['total']}  (critical {s['critical']} · high {s['high']} "
-              f"· medium {s['medium']} · low {s['low']})")
-        print(f"Full report: kobo report --last --format json   (scan #{body['scan_id']})")
+        g = body["grade"]
+        print()
+        print(_c("Security Grade: ", "1") + _c(f" {g} ", "7;" + _GRADE_CODE.get(g, "1;31")))
+        print("Findings: %d  (%s · %s · %s · %s)" % (
+            s["total"],
+            _sev("critical", s["critical"], "1;31"), _sev("high", s["high"], "31"),
+            _sev("medium", s["medium"], "33"), _sev("low", s["low"], "2")))
+        if s["critical"] or s["high"]:
+            print(_c("⚠ Fix the critical/high issues before shipping.", "33"))
+        elif s["total"] == 0:
+            print(_c("✓ No issues found — clean.", "32"))
+        print(_c(f"Full report: kobo report --last --format json   (scan #{body['scan_id']})", "2"))
 
 
 def cmd_report(args) -> None:
@@ -264,16 +303,17 @@ def cmd_verify_target(args) -> None:
         if r.status_code != 200:
             _die(_detail(r))
         ch = r.json()
-        print(f"To prove you control {ch['host']}, add EITHER:")
-        print(f"  • DNS TXT record   {ch['dns']['name']}   =   {ch['dns']['value']}")
-        print(f"  • or a file at     {ch['http']['url']}   containing   {ch['http']['content']}")
+        print(_c(f"To prove you control {ch['host']}, add EITHER:", "1"))
+        print(f"  • DNS TXT record   {_c(ch['dns']['name'], '36')}   =   {_c(ch['dns']['value'], '36')}")
+        print(f"  • or a file at     {_c(ch['http']['url'], '36')}   containing   {_c(ch['http']['content'], '36')}")
         if not args.check:
-            print(f"\nThen confirm with:  kobo verify-target {ch['host']} --check")
+            print("\nThen confirm with:  " + _c(f"kobo verify-target {ch['host']} --check", "36"))
             return
         for method in ("http", "dns"):
             v = c.post("/targets/verify", headers=headers, json={"host": ch["host"], "method": method})
             if v.status_code == 200:
-                print(f"\n✓ verified {ch['host']} (via {method}) — active scans on it are now allowed")
+                print("\n" + _c("✓", "32") + _c(f" verified {ch['host']}", "1;32")
+                      + f" (via {method}) — active scans on it are now allowed")
                 return
         _die("not verified yet — make sure the DNS record or file is live, then re-run with --check")
 
