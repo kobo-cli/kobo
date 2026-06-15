@@ -53,6 +53,42 @@ straight out of an AI prompt:
 
 ---
 
+## 🤖 Built for your AI coding agent
+
+Kobo is made to be **run by your AI agent** — Claude Code, Cursor, Copilot,
+Windsurf — so vulnerabilities are caught and fixed *while* the code is written,
+not in a security review three weeks later. **Set it up once, then it runs itself.**
+
+**1. Set it up once** (so the agent never touches your credentials):
+
+```bash
+pip install kobo-scan && kobo register --email you@gmail.com && kobo verify <code>
+```
+
+**2. Paste this rule into your AI tool — then forget about it:**
+
+> **Security gate — always enforce.** Before you mark any coding task complete, run
+> `kobo scan --path . --format json` and parse `findings`. For each finding, open
+> `file` at `line`, understand the `cwe` and `message`, and fix the **root cause** —
+> parameterize the query, validate or encode the input, drop the unsafe call — never
+> suppress, comment out, or ignore it. Then **re-scan** and repeat until **zero
+> `critical` and zero `high`** findings remain (target grade **A**). Do not introduce
+> new `critical`/`high` issues, and never tell me a task is done while one is open.
+
+| Your AI tool | Paste the rule into |
+|---|---|
+| Claude Code | `CLAUDE.md` |
+| Cursor | `.cursorrules` |
+| GitHub Copilot | `.github/copilot-instructions.md` |
+| Windsurf | `.windsurfrules` |
+| Any other agent / API | the system prompt |
+
+From now on, every time the agent touches code it scans, reads the machine-readable
+findings, fixes the real cause, and re-scans — on its own. **Security that keeps pace
+with AI-speed development. Zero glue code.**
+
+---
+
 ## 📦 Install
 
 Requires **Python 3.10+**.
@@ -87,37 +123,6 @@ Full report: kobo report --last --format json
 
 Your API key is saved in `~/.kobo/` (readable only by you). On another machine,
 skip re-verifying — just `kobo login --key <your-key>`.
-
----
-
-## 🤖 Let your AI agent run it (no manual step)
-
-Kobo is designed to be **driven by AI coding agents** — Claude, GPT, Cursor,
-Copilot — so scanning and fixing happen *while* code is written.
-
-**1. You set it up once** (so the agent never touches your credentials):
-
-```bash
-pip install kobo-scan && kobo register --email you@gmail.com && kobo verify <code>
-```
-
-**2. Drop this instruction into your AI tool:**
-
-> After writing or changing code, run `kobo scan --path . --format json`. Read the
-> JSON `findings`; for each, open `file` at `line` and fix the issue described by
-> `cwe` + `message`. Re-run until there are **no `critical` or `high`** findings.
-> Never finish a task with an open critical/high vulnerability.
-
-| Tool | Where it goes |
-|---|---|
-| Claude Code | `CLAUDE.md` |
-| Cursor | `.cursorrules` |
-| GitHub Copilot | `.github/copilot-instructions.md` |
-| Windsurf | `.windsurfrules` |
-| Custom agent / API | the system prompt |
-
-Now the agent scans, reads machine-readable findings, fixes them, and re-scans on
-its own — every time it touches code. Zero glue code.
 
 ---
 
