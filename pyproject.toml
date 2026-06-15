@@ -1,5 +1,5 @@
 [project]
-name = "kobo-cli"
+name = "kobo-scan"
 version = "0.1.0"
 description = "Kobo — free-tier security scanner CLI"
 requires-python = ">=3.10"
