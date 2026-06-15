@@ -55,6 +55,10 @@ straight out of an AI prompt:
 > and scanned **automatically** — no setup — with a dedicated **STM32 / ARM Cortex-M
 > HAL** ruleset for the peripheral-misuse and memory-safety bugs that bite firmware.
 
+> 🎯 **Not just code — your running stack too.** Point Kobo at a live web app, an API,
+> a container image, or a database **you own** and it scans those as well. See
+> [Scan live targets you own](#-scan-live-targets-you-own).
+
 ---
 
 ## 🤖 Built for your AI coding agent
@@ -78,6 +82,9 @@ pip install kobo-scan && kobo register --email you@gmail.com && kobo verify <cod
 > suppress, comment out, or ignore it. Then **re-scan** and repeat until **zero
 > `critical` and zero `high`** findings remain (target grade **A**). Do not introduce
 > new `critical`/`high` issues, and never tell me a task is done while one is open.
+> For any other capability (CI gating, or scanning a live URL / API / container /
+> database), run `kobo --help` or read the README at https://github.com/kobo-cli/kobo
+> before telling me it can't be done.
 
 | Your AI tool | Paste the rule into |
 |---|---|
@@ -147,6 +154,31 @@ skip re-verifying — just `kobo login --key <your-key>`.
 
 ---
 
+## 🎯 Scan live targets you own
+
+Beyond source code, Kobo can scan things you've **deployed** — but only after you
+**prove you control them**, so it can never be aimed at someone else's systems:
+
+```bash
+kobo verify-target myapp.com          # we show you a DNS record / file to add
+kobo verify-target myapp.com --check  # we confirm it — once per host
+```
+
+Then scan the live target:
+
+```bash
+kobo scan --url https://myapp.com                              # a running web app
+kobo scan --openapi https://myapp.com/openapi.json --api-url https://myapp.com   # an API
+kobo scan --image ghcr.io/you/app:latest                       # a container image
+kobo scan --db postgresql://user:pass@db.myapp.com:5432/app    # a database
+```
+
+Findings land in the **same report** as code scans (same grade, same fields). You
+can only scan hosts you've verified — internal and unverified addresses are refused.
+*(Container-image scanning inspects the image, so it needs no ownership check.)*
+
+---
+
 ## 🧰 Commands
 
 | Command | What it does |
@@ -155,6 +187,8 @@ skip re-verifying — just `kobo login --key <your-key>`.
 | `kobo verify <code>` | activate your account + store your key |
 | `kobo login --key <key>` | log in on a new machine with an existing key |
 | `kobo scan --path <dir>` | scan a project — `--format text\|json` |
+| `kobo scan --url\|--image\|--db\|--api-url` | scan a live target you own (see above) |
+| `kobo verify-target <host>` | prove you own a host so you can scan it live (`--check` to confirm) |
 | `kobo report --last` | re-fetch your latest report (`--format json`) |
 | `kobo history` | list your past scans |
 | `kobo whoami` / `kobo logout` | show account / forget credentials |

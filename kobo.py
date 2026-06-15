@@ -179,12 +179,46 @@ def _ensure_terms(c: httpx.Client, headers: dict) -> None:
         _die(_detail(r))
 
 
+def _parse_db(dsn: str) -> dict:
+    from urllib.parse import urlsplit
+    u = urlsplit(dsn)
+    if not u.scheme or not u.hostname or not u.port:
+        _die("--db must look like postgresql://user:pass@host:5432/dbname")
+    return {
+        "db_type": u.scheme.split("+")[0],
+        "db_host": u.hostname,
+        "db_port": str(u.port),
+        "db_user": u.username or "",
+        "db_password": u.password or "",
+        "db_name": (u.path or "/").lstrip("/"),
+    }
+
+
 def cmd_scan(args) -> None:
     headers = _auth_headers()
-    payload = pack_path(args.path)
+    # optional active targets (each must be a host you've verified with `verify-target`)
+    active: dict = {}
+    if getattr(args, "url", None):
+        active["target_url"] = args.url
+    if getattr(args, "image", None):
+        active["image"] = args.image
+    if getattr(args, "openapi", None):
+        active["openapi_url"] = args.openapi
+    if getattr(args, "api_url", None):
+        active["api_url"] = args.api_url
+    if getattr(args, "db", None):
+        active.update(_parse_db(args.db))
+    has_active = bool(active)
+
+    files = None
+    # upload code when a path is given, or when there's no active target at all
+    if args.path is not None or not has_active:
+        payload = pack_path(args.path or ".")
+        files = {"file": ("src.zip", payload, "application/zip")}
+
     with make_client() as c:
         _ensure_terms(c, headers)
-        r = c.post("/scan", headers=headers, files={"file": ("src.zip", payload, "application/zip")})
+        r = c.post("/scan", headers=headers, files=files, data=active or None)
     if r.status_code != 200:
         _die(_detail(r), code=2)
     body = r.json()
@@ -222,6 +256,28 @@ def cmd_history(args) -> None:
     print(json.dumps(r.json(), indent=2))
 
 
+def cmd_verify_target(args) -> None:
+    """Prove you control a host so you can run active scans (--url/--api-url/--db) on it."""
+    headers = _auth_headers()
+    with make_client() as c:
+        r = c.post("/targets", headers=headers, json={"host": args.host})
+        if r.status_code != 200:
+            _die(_detail(r))
+        ch = r.json()
+        print(f"To prove you control {ch['host']}, add EITHER:")
+        print(f"  • DNS TXT record   {ch['dns']['name']}   =   {ch['dns']['value']}")
+        print(f"  • or a file at     {ch['http']['url']}   containing   {ch['http']['content']}")
+        if not args.check:
+            print(f"\nThen confirm with:  kobo verify-target {ch['host']} --check")
+            return
+        for method in ("http", "dns"):
+            v = c.post("/targets/verify", headers=headers, json={"host": ch["host"], "method": method})
+            if v.status_code == 200:
+                print(f"\n✓ verified {ch['host']} (via {method}) — active scans on it are now allowed")
+                return
+        _die("not verified yet — make sure the DNS record or file is live, then re-run with --check")
+
+
 def cmd_version(args) -> None:
     print(f"kobo {__version__}")
 
@@ -237,9 +293,18 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--key", required=True); s.set_defaults(fn=cmd_login)
     s = sub.add_parser("whoami", help="show account"); s.set_defaults(fn=cmd_whoami)
     s = sub.add_parser("logout", help="forget credentials"); s.set_defaults(fn=cmd_logout)
-    s = sub.add_parser("scan", help="scan a project")
-    s.add_argument("--path", default="."); s.add_argument("--format", choices=["text", "json"], default="text")
+    s = sub.add_parser("scan", help="scan a project and/or an owned live target")
+    s.add_argument("--path", default=None, help="project dir to scan (default '.' if no active target)")
+    s.add_argument("--format", choices=["text", "json"], default="text")
+    s.add_argument("--url", help="active web scan of an OWNED url (DAST)")
+    s.add_argument("--image", help="scan a container image ref for CVEs/secrets")
+    s.add_argument("--openapi", help="OpenAPI/Swagger spec url (use with --api-url)")
+    s.add_argument("--api-url", dest="api_url", help="base url of an OWNED api to fuzz")
+    s.add_argument("--db", help="audit an OWNED live db: postgresql://user:pass@host:5432/name")
     s.set_defaults(fn=cmd_scan)
+    s = sub.add_parser("verify-target", help="prove you own a host so you can actively scan it")
+    s.add_argument("host"); s.add_argument("--check", action="store_true", help="check the challenge now")
+    s.set_defaults(fn=cmd_verify_target)
     s = sub.add_parser("report", help="fetch a report")
     s.add_argument("--last", action="store_true"); s.add_argument("--id", type=int); s.add_argument("--format", default="json")
     s.set_defaults(fn=cmd_report)
