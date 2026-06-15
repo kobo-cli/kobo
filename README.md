@@ -52,6 +52,63 @@ kobo report --last --format json      # re-fetch the latest report
 
 Each finding includes the file, line, severity, CWE, and a short message.
 
+## Examples
+
+**Scan the current project:**
+```bash
+kobo scan --path .
+```
+```
+Security Grade: B
+Findings: 7  (critical 0 · high 2 · medium 3 · low 2)
+Full report: kobo report --last --format json
+```
+
+**Scan a specific folder:**
+```bash
+kobo scan --path ./services/api
+```
+
+**Get the machine-readable report** (file · line · severity · CWE · message — ready for an AI agent to fix):
+```bash
+kobo scan --path . --format json
+```
+```json
+{
+  "grade": "B",
+  "summary": { "total": 7, "critical": 0, "high": 2, "medium": 3, "low": 2 },
+  "findings": [
+    { "file": "app.py", "line": 42, "severity": "high",
+      "cwe": "CWE-89", "title": "SQL Injection",
+      "message": "Untrusted input flows into a SQL query" }
+  ]
+}
+```
+
+**Pipe findings into your AI coding agent** to auto-fix:
+```bash
+kobo scan --path . --format json > findings.json
+# then: "Fix every finding in findings.json"
+```
+
+**Re-fetch your latest report / list history:**
+```bash
+kobo report --last --format json
+kobo history
+```
+
+**Use in CI** (fail the build on a bad grade — example with `jq`):
+```bash
+GRADE=$(kobo scan --path . --format json | jq -r .grade)
+[ "$GRADE" = "F" ] && { echo "Security grade F — failing build"; exit 1; }
+```
+
+**Returning on a new machine** (log in with your existing key instead of re-verifying):
+```bash
+kobo login --key kobo_xxxxxxxxxxxxxxxx
+kobo scan --path .
+```
+
 ## All commands
 
 | Command | Description |
