@@ -37,6 +37,43 @@ python kobo.py --help
 ```
 </details>
 
+## Let your AI assistant use Kobo automatically
+
+Kobo is built to be **driven by AI coding agents** (Claude, GPT, Cursor, Copilot, …)
+so security scanning happens *while* code is written — no manual step.
+
+**1. One-time setup (you do this once):**
+```bash
+pip install kobo-scan
+kobo register --email you@gmail.com
+kobo verify <code>        # from your email
+```
+After this the API key is stored in `~/.kobo/`, so the agent can scan without ever
+seeing your credentials.
+
+**2. Give your AI agent this instruction** — paste it into your tool's rules/prompt:
+
+> After you write or modify code, run `kobo scan --path . --format json`.
+> Read the JSON `findings`; for each, open `file` at `line` and fix the issue
+> described by `cwe` + `message`. Re-run `kobo scan` until there are **no `critical`
+> or `high` findings**. Never finish a task with an open critical/high vulnerability.
+
+That's it — now the agent scans, reads machine-readable findings, fixes them, and
+re-scans on its own, every time it touches code.
+
+**Where to put the instruction:**
+
+| Tool | File / place |
+| --- | --- |
+| Claude Code | `CLAUDE.md` in your repo |
+| Cursor | `.cursorrules` (or Settings → Rules) |
+| GitHub Copilot | `.github/copilot-instructions.md` |
+| Windsurf | `.windsurfrules` |
+| Custom agent / API | the system prompt |
+
+The report is pure JSON (`file · line · severity · cwe · message`), so any agent can
+parse and act on it with **zero glue code** — fully hands-off security as you build.
+
 ## Getting started (3 steps)
 
 ```bash
