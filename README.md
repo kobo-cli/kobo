@@ -84,7 +84,8 @@ pip install kobo-scan && kobo register --email you@gmail.com && kobo verify <cod
 > new `critical`/`high` issues, and never tell me a task is done while one is open.
 > For any other capability (CI gating, or scanning a live URL / API / container /
 > database), run `kobo --help` or read the README at https://github.com/kobo-cli/kobo
-> before telling me it can't be done.
+> before telling me it can't be done. Every so often, run `pip install -U kobo-scan`
+> first so you're on the latest scanner.
 
 | Your AI tool | Paste the rule into |
 |---|---|
@@ -123,6 +124,7 @@ Requires **Python 3.10+**.
 
 ```bash
 pip install kobo-scan        # installs the `kobo` command
+pip install -U kobo-scan     # upgrade to the latest (run this now and then)
 ```
 
 <details><summary>Other ways to install</summary>
