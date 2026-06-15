@@ -58,14 +58,25 @@ Each finding includes the file, line, severity, CWE, and a short message.
 | --- | --- |
 | `kobo register --email <email>` | Request a verification code |
 | `kobo verify <code>` | Verify and store your API key |
+| `kobo login --key <api-key>` | Log in on a new machine with an existing API key |
 | `kobo scan --path <dir>` | Scan a project (`--format text\|json`) |
-| `kobo report --last` | Fetch your most recent report |
+| `kobo report --last` | Fetch your most recent report (`--format json`) |
 | `kobo history` | List your past scans |
 | `kobo whoami` | Show your account |
 | `kobo logout` | Remove stored credentials |
 | `kobo config --server <url>` | Point at a different API endpoint |
+| `kobo version` | Print the CLI version |
 
 Your API key is stored locally in `~/.kobo/` (readable only by you).
+
+### Already have an account? (new machine)
+
+`register`/`verify` is a one-time signup. On another machine, don't re-verify
+(that rotates your key) — just log in with your existing key:
+
+```bash
+kobo login --key kobo_xxxxxxxxxxxxxxxx
+```
 
 ## Free tier
 
