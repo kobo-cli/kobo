@@ -9,9 +9,7 @@ Self-service: registers your account, manages your API key, accepts the terms on
 wallet/quota/billing — this is the free trial.
 
   kobo config --server https://kobo-api-712614001328.europe-west1.run.app
-  kobo register --email you@gmail.com
-  kobo verify 123456
-  kobo scan --path .
+  kobo scan --path .                 # first run registers you automatically
   kobo report --last --format json
 """
 from __future__ import annotations
@@ -105,7 +103,28 @@ def make_client() -> httpx.Client:
 def _auth_headers() -> dict:
     key = _read(_CREDS).get("api_key")
     if not key:
-        _die("not logged in — run `kobo register` then `kobo verify <code>`")
+        _die("not logged in — run `kobo register`")
+    return {"Authorization": f"Bearer {key}"}
+
+
+def _ensure_auth(c: httpx.Client) -> dict:
+    """Auth headers, registering a background account on first use if needed.
+
+    Onboarding is frictionless: the first scan silently creates an account and
+    saves its key (no email step) — the user never sees registration. If the
+    server requires email verification, fall back to an explicit prompt.
+    """
+    key = _read(_CREDS).get("api_key")
+    if not key:
+        r = c.post("/register", json={})
+        body = r.json() if r.status_code == 200 else {}
+        if body.get("api_key"):
+            key = body["api_key"]
+            _write(_CREDS, {**_read(_CREDS), "email": body.get("email", ""),
+                            "api_key": key}, secret=True)
+        else:
+            _die("registration required — run `kobo register --email you@gmail.com` "
+                 "then `kobo verify <code>`")
     return {"Authorization": f"Bearer {key}"}
 
 
@@ -150,13 +169,22 @@ def cmd_config(args) -> None:
 
 
 def cmd_register(args) -> None:
+    payload = {"email": args.email} if args.email else {}
     with make_client() as c:
-        r = c.post("/register", json={"email": args.email})
+        r = c.post("/register", json=payload)
     if r.status_code != 200:
         _die(_detail(r))
-    _write(_CREDS, {**_read(_CREDS), "email": args.email}, secret=True)
-    print(_c("✓", "32") + f" verification code sent to {args.email} — run "
-          + _c("kobo verify <code>", "36"))
+    body = r.json()
+    if body.get("api_key"):
+        # frictionless onboarding — the account is created and the key issued now
+        _write(_CREDS, {**_read(_CREDS), "email": body.get("email", ""),
+                        "api_key": body["api_key"]}, secret=True)
+        print(_c("✓", "32") + " account ready — scan with " + _c("kobo scan --path .", "36"))
+    else:
+        # email-verification mode — a code was emailed; finish with `kobo verify`
+        _write(_CREDS, {**_read(_CREDS), "email": args.email}, secret=True)
+        print(_c("✓", "32") + f" verification code sent to {args.email} — run "
+              + _c("kobo verify <code>", "36"))
 
 
 def cmd_verify(args) -> None:
@@ -230,7 +258,6 @@ def _parse_db(dsn: str) -> dict:
 
 
 def cmd_scan(args) -> None:
-    headers = _auth_headers()
     # optional active targets (each must be a host you've verified with `verify-target`)
     active: dict = {}
     if getattr(args, "url", None):
@@ -252,6 +279,7 @@ def cmd_scan(args) -> None:
         files = {"file": ("src.zip", payload, "application/zip")}
 
     with make_client() as c:
+        headers = _ensure_auth(c)        # frictionless: auto-register on first scan
         _ensure_terms(c, headers)
         r = c.post("/scan", headers=headers, files=files, data=active or None)
     if r.status_code != 200:
@@ -337,9 +365,8 @@ AI agents — use Kobo as an automatic security gate:
 
 _EPILOG = """\
 Quickstart:
-  kobo register --email you@gmail.com    get a 6-digit code by email
-  kobo verify 123456                     activate + save your key (in ~/.kobo)
-  kobo scan --path .                     scan the current project
+  kobo scan --path .                     scan the current project (auto-registers
+                                         a free account on first run — no signup)
   kobo scan --path . --format json       machine-readable output (CI / AI agents)
 
 Scan live targets you OWN (prove ownership first):
@@ -372,8 +399,8 @@ def build_parser() -> argparse.ArgumentParser:
     sub = p.add_subparsers(dest="cmd", metavar="<command>")
 
     s = sub.add_parser("config", help="set the server URL"); s.add_argument("--server"); s.set_defaults(fn=cmd_config)
-    s = sub.add_parser("register", help="register an email"); s.add_argument("--email", required=True); s.set_defaults(fn=cmd_register)
-    s = sub.add_parser("verify", help="verify the OTP code"); s.add_argument("code"); s.set_defaults(fn=cmd_verify)
+    s = sub.add_parser("register", help="create an account (no email needed)"); s.add_argument("--email", help="optional label; not required"); s.set_defaults(fn=cmd_register)
+    s = sub.add_parser("verify", help="verify an OTP code (only if email verification is on)"); s.add_argument("code"); s.set_defaults(fn=cmd_verify)
     s = sub.add_parser("login", help="log in with an existing API key")
     s.add_argument("--key", required=True); s.set_defaults(fn=cmd_login)
     s = sub.add_parser("whoami", help="show account"); s.set_defaults(fn=cmd_whoami)

@@ -67,10 +67,10 @@ Kobo is made to be **run by your AI agent** — Claude Code, Cursor, Copilot,
 Windsurf — so vulnerabilities are caught and fixed *while* the code is written,
 not in a security review three weeks later. **Set it up once, then it runs itself.**
 
-**1. Set it up once** (so the agent never touches your credentials):
+**1. Install** (your first scan registers a free account automatically — no signup):
 
 ```bash
-pip install kobo-scan && kobo register --email you@gmail.com && kobo verify <code>
+pip install kobo-scan
 ```
 
 **2. Paste this rule into your AI tool — then forget about it** (or run `kobo agent` to print it):
@@ -154,9 +154,7 @@ your PATH, not just Kobo.)
 ## 🚀 Quick start
 
 ```bash
-kobo register --email you@gmail.com   # we email you a 6-digit code
-kobo verify 123456                    # activates your account
-kobo scan --path .                    # accept the terms once, then scan
+kobo scan --path .                    # first run registers you + accept terms once
 ```
 
 ```text
@@ -166,7 +164,7 @@ Full report: kobo report --last --format json
 ```
 
 Your API key is saved in `~/.kobo/` (readable only by you). On another machine,
-skip re-verifying — just `kobo login --key <your-key>`.
+reuse it with `kobo login --key <your-key>`.
 
 ---
 
@@ -199,8 +197,7 @@ can only scan hosts you've verified — internal and unverified addresses are re
 
 | Command | What it does |
 |---|---|
-| `kobo register --email <e>` | sign up — get a verification code by email |
-| `kobo verify <code>` | activate your account + store your key |
+| `kobo register` | create a free account (happens automatically on first scan) |
 | `kobo login --key <key>` | log in on a new machine with an existing key |
 | `kobo scan --path <dir>` | scan a project — `--format text\|json` |
 | `kobo scan --url\|--image\|--db\|--api-url` | scan a live target you own (see above) |

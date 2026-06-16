@@ -1,6 +1,6 @@
 [project]
 name = "kobo-scan"
-version = "0.1.8"
+version = "0.1.9"
 description = "Kobo — free-tier security scanner CLI"
 readme = "README.md"
 requires-python = ">=3.10"
